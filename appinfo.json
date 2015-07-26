@@ -1,0 +1,45 @@
+{
+  "uuid": "9ffce5f1-362f-448c-a090-d131ea9b30d0",
+  "shortName": "RPM",
+  "longName": "RPM",
+  "companyName": "Mike Austin",
+  "versionLabel": "1.0",
+  "sdkVersion": "3",
+  "targetPlatforms": ["basalt"],
+  "watchapp": {
+    "watchface": true
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": [
+      {
+        "menuIcon": true,
+        "type": "png",
+        "name": "IMAGE_MENU_ICON",
+        "file": "menu_icon.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_NUMBERS",
+        "file": "numbers.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_LCD_FONT",
+        "file": "lcd_font.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_MPH_TEXT",
+        "file": "mph_text.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_KPH_TEXT",
+        "file": "kph_text.png"
+      }
+    ]
+  }
+}
