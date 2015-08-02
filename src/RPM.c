@@ -1,279 +1,181 @@
-#include <pebble.h>
+// #include <pebble.h>
   
-static Window *main_window;
-static Layer  *gauge_layer, *dial_layer;
+// Window *main_window;
+// Layer  *gauge_layer, *dial_layer;
 
-static GBitmap *numbers_bitmap;
-static GBitmap *lcd_font_bitmap, *lcd_font_digits[10];
-static GBitmap *mph_text_bitmap, *kph_text_bitmap;
+// GBitmap *numbers_bitmap, *background_bitmap;
+// GBitmap *lcd_font_bitmap, *lcd_font_digits[10];
+// GBitmap *mph_text_bitmap, *kph_text_bitmap;
+// GBitmap *lights_bitmap, *lights_icons[2];
 
-// Helper function to calculate dial angle
+// int   charge_percent = 0;
+// bool  bluetooth_connected = false;
+// float angle_advance = 5;
+// bool  angle_forward = false;
 
-GPoint pointForAngle(int angle, int radius)
-{
-    return (GPoint) { sin_lookup(angle) * radius / TRIG_MAX_RATIO, -cos_lookup(angle) * radius / TRIG_MAX_RATIO };
-}
+// void gauge_layer_update(Layer *layer, GContext *ctx);
+// void dial_layer_update(Layer *layer, GContext *ctx);
+// void dial_animation_callback(void *data);
 
-// Layer update function that draws gauge background, frame, and ticks - also draws LCD background
+// // Helper function to calculate dial angle
 
-void gauge_layer_update(Layer *layer, GContext *ctx)
-{
-    // Draw background
+// GPoint point_for_angle(int angle, int radius)
+// {
+//     return (GPoint) { sin_lookup(angle) * radius / TRIG_MAX_RATIO, -cos_lookup(angle) * radius / TRIG_MAX_RATIO };
+// }
 
-    int size = 4;
-    graphics_context_set_stroke_color(ctx, GColorDarkGray);
-    for (int x = -144; x < 144 / size; x++)
-    {
-        graphics_draw_line(ctx, GPoint(x * size, 0), GPoint(x * size + 168, 168));
-    }
+// void graphics_copy_frame_buffer_to_bitmap(GContext *ctx, GBitmap *bitmap)
+// {
+//     GBitmap *buffer = graphics_capture_frame_buffer(ctx);
+//     uint8_t *data = gbitmap_get_data(buffer);
 
-    GRect frame = layer_get_frame(layer);
-    GPoint center = GPoint(frame.size.w / 2, frame.size.h / 2 - 1);
+//     uint8_t *data2 = gbitmap_get_data(bitmap);
 
-    // Draw outer frame
+//     for (int i = 0; i < 168 * 144; i++)
+//     {
+//         data2[i] = data[i];
+//     }
 
-    graphics_context_set_stroke_color(ctx, GColorBlack);
-    graphics_context_set_stroke_width(ctx, 2);
-    graphics_draw_circle(ctx, GPoint(center.x, center.y), 81);
+//     graphics_release_frame_buffer(ctx, buffer);
+// }
 
-    graphics_context_set_stroke_color(ctx, GColorLightGray);
-    graphics_context_set_stroke_width(ctx, 6);
-    graphics_draw_circle(ctx, GPoint(center.x, center.y), 78);
+// static void main_window_load(Window *window)
+// {
+//     // Create numbers bitmaps
 
-    graphics_context_set_stroke_color(ctx, GColorWhite);
-    graphics_context_set_stroke_width(ctx, 2);
-    graphics_draw_circle(ctx, GPoint(center.x, center.y), 74);
+//     numbers_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_NUMBERS);
+//     background_bitmap = gbitmap_create_blank(GSize(144, 168), GBitmapFormat8Bit);
 
-    graphics_context_set_stroke_color(ctx, GColorDarkGray);
-    graphics_context_set_stroke_width(ctx, 4);
-    graphics_draw_circle(ctx, GPoint(center.x, center.y), 72);
+//     // Create MPH text bitmaps
 
-    // Draw face
+//     mph_text_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MPH_TEXT);
+//     kph_text_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_KPH_TEXT);
 
-    graphics_context_set_fill_color(ctx, GColorLightGray);
-    graphics_fill_circle(ctx, GPoint(center.x, center.y), 68);
+//     // Create LCD bitmaps
 
-    graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_fill_circle(ctx, GPoint(center.x, center.y + 0), 64);
+//     lcd_font_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LCD_FONT);
 
-    // Draw ticks
+//     for (int i = 0; i < 10; i++)
+//     {
+//         lcd_font_digits[i] = gbitmap_create_as_sub_bitmap(lcd_font_bitmap, GRect(i * 15, 0, 15, 25));
+//     }
 
-    for (int i = -120; i <= 120; i += 1)
-    {
-        int angle = TRIG_MAX_ANGLE * (i / 360.0);
+//     // Create lights bitmaps
 
-        graphics_context_set_stroke_color(ctx, GColorBlack);
+//     lights_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_GAUGE_LIGHTS);
 
-        if (i >= 80)
-        {
-            graphics_context_set_stroke_color(ctx, GColorRed);
-            graphics_context_set_stroke_width(ctx, 2);
-        }
+//     for (int i = 0; i < 2; i++)
+//     {
+//         lights_icons[i] = gbitmap_create_as_sub_bitmap(lights_bitmap, GRect(i * 22, 0, 22, 15));
+//     }
 
-        if (i % (240 / 8) == 0)
-        {
-            // Draw major ticks
+//     // Create gauge layer
 
-            graphics_context_set_stroke_width(ctx, 2);
+//     gauge_layer = layer_create(GRect(0, 0, 144, 168));
 
-            GPoint p = pointForAngle(angle, 58), p2 = pointForAngle(angle, 68);
-            graphics_draw_line(ctx, GPoint(p.x + center.x, p.y + center.y), GPoint(p2.x + center.x, p2.y + center.y));
-        }
-        else if (i % (240 / 16) == 0)
-        {
-            // Draw half major ticks
+//     layer_set_update_proc(gauge_layer, gauge_layer_update);
+//     layer_add_child(window_get_root_layer(window), gauge_layer);
 
-            graphics_context_set_stroke_width(ctx, 2);
+//     // create dial layer
 
-            GPoint point2 = (GPoint) { sin_lookup(angle) * 60 / TRIG_MAX_RATIO + 144 / 2, -cos_lookup(angle) * 60 / TRIG_MAX_RATIO + center.y };
-            GPoint point = (GPoint) { sin_lookup(angle) * 68 / TRIG_MAX_RATIO + 144 / 2, -cos_lookup(angle) * 68 / TRIG_MAX_RATIO + center.y };
+//     dial_layer = layer_create(GRect(0, 0, 144, 168));
 
-            graphics_draw_line(ctx, point2, point);
-        }
-        else if (i % (240 / 48) == 0)
-        {
-            // Draw minor ticks
-
-            graphics_context_set_stroke_width(ctx, 1);
-
-            GPoint point2 = (GPoint) { sin_lookup(angle) * 63 / TRIG_MAX_RATIO + 144 / 2, -cos_lookup(angle) * 63 / TRIG_MAX_RATIO + center.y };
-            GPoint point = (GPoint) { sin_lookup(angle) * 65 / TRIG_MAX_RATIO + 144 / 2, -cos_lookup(angle) * 65 / TRIG_MAX_RATIO + center.y };
-
-            graphics_draw_line(ctx, point2, point);
-        }
-    }
-
-    graphics_context_set_stroke_color(ctx, GColorBlack);
-    graphics_context_set_stroke_width(ctx, 2);
-
-    graphics_draw_circle(ctx, GPoint(center.x, center.y), 68);
-
-    // Draw gauge numbers
-
-    graphics_context_set_compositing_mode(ctx, GCompOpSet);
-    graphics_draw_bitmap_in_rect(ctx, numbers_bitmap, GRect(0, 0, 144, 168));
-
-    graphics_draw_bitmap_in_rect(ctx, clock_is_24h_style() ? kph_text_bitmap : mph_text_bitmap, GRect((144 - 30) / 2, 97, 30, 20));
-
-    // Draw MPH Background
-
-    graphics_context_set_fill_color(ctx, GColorDarkGray);
-    graphics_fill_rect(ctx, GRect((144 - 52) / 2, 115, 52, 25), 3, GCornersAll);
-
-    graphics_context_set_fill_color(ctx, GColorPictonBlue);
-    //graphics_context_set_fill_color(ctx, GColorMintGreen);
-    graphics_fill_rect(ctx, GRect((144 - 50) / 2, 116, 50, 23), 3, GCornersAll);
-}
-
-// Layer update function that draws gauge dial and LCD text
-
-void dial_layer_update(Layer *layer, GContext *ctx)
-{
-    GRect frame = layer_get_frame(layer);
-    GPoint center = GPoint(frame.size.w / 2, frame.size.h / 2 - 1);
-
-    time_t temp = time(NULL); 
-    struct tm *tick_time = localtime(&temp);
-
-    int hour = tick_time->tm_hour % (clock_is_24h_style() ? 24 : 12),
-        min  = tick_time->tm_min;
-
-    int angle = min * (180 / 60.0) - 120;
-
-    // Draw dial stroke
-
-    GPoint pp = pointForAngle(TRIG_MAX_ANGLE * ((angle - 90) / 360.0), 2);
-    GPoint p = pointForAngle(TRIG_MAX_ANGLE * (angle / 360.0), 63);
-
-    graphics_context_set_stroke_color(ctx, GColorBlack);
-    graphics_context_set_stroke_width(ctx, 4);
-
-    graphics_draw_line(ctx, GPoint(pp.x + center.x, pp.y + center.y), GPoint(p.x + center.x, p.y + center.y));
-    graphics_draw_line(ctx, GPoint(-pp.x + center.x, -pp.y + center.y), GPoint(p.x + center.x, p.y + center.y));
-
-    // Draw dial
-
-    graphics_context_set_stroke_color(ctx, GColorOrange);
-    graphics_context_set_stroke_width(ctx, 2);
-
-    graphics_draw_line(ctx, GPoint(pp.x + center.x, pp.y + center.y), GPoint(p.x + center.x, p.y + center.y));
-    graphics_draw_line(ctx, GPoint(-pp.x + center.x, -pp.y + center.y), GPoint(p.x + center.x, p.y + center.y));
-
-    // Draw dial center cap
-
-    graphics_context_set_fill_color(ctx, GColorBlack);
-    graphics_fill_circle(ctx, GPoint(center.x, center.y), 10);
-
-    // Draw Hour LCD
-
-    static char time_buffer[] = "240";
-
-    snprintf(time_buffer, sizeof(time_buffer), "%d", hour * 10 + min / 6);
-
-    graphics_context_set_compositing_mode(ctx, GCompOpSet);
-
-    int x = 94 - strlen(time_buffer) * 15;
-    for (unsigned i = 0; i < strlen(time_buffer); i++)
-    {
-        graphics_draw_bitmap_in_rect(ctx, lcd_font_digits[time_buffer[i] - '0'], GRect(x + i * 15, 115, 15, 27));
-    }
-
-    // Draw black line to center gauge
-
-    graphics_context_set_stroke_color(ctx, GColorBlack);
-    graphics_context_set_stroke_width(ctx, 1);
-    graphics_draw_line(ctx, GPoint(0, 0), GPoint(0, 168));
-}
-
-static void main_window_load(Window *window)
-{
-    // Create numbers bitmaps
-
-    numbers_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_NUMBERS);
-
-    // Create MPH text bitmaps
-
-    mph_text_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MPH_TEXT);
-    kph_text_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_KPH_TEXT);
-
-    // Create LCD bitmaps
-
-    lcd_font_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LCD_FONT);
-
-    for (int i = 0; i < 10; i++)
-    {
-        lcd_font_digits[i] = gbitmap_create_as_sub_bitmap(lcd_font_bitmap, GRect(i * 15, 0, 15, 25));
-    }
-
-    // Create gauge layer
-
-    gauge_layer = layer_create(GRect(0, 0, 144, 168));
-
-    layer_set_update_proc(gauge_layer, gauge_layer_update);
-    layer_add_child(window_get_root_layer(window), gauge_layer);
-
-    // create dial layer
-
-    dial_layer = layer_create(GRect(0, 0, 144, 168));
-
-    layer_set_update_proc(dial_layer, dial_layer_update);
-    layer_add_child(window_get_root_layer(window), dial_layer);
-}
+//     layer_set_update_proc(dial_layer, dial_layer_update);
+//     layer_add_child(window_get_root_layer(window), dial_layer);
+// }
  
-static void main_window_unload(Window *window)
-{
-    // Destroy layers
+// static void main_window_unload(Window *window)
+// {
+//     // Destroy layers
 
-    layer_destroy(dial_layer);
-    layer_destroy(gauge_layer);
+//     layer_destroy(dial_layer);
+//     layer_destroy(gauge_layer);
 
-    // Destroy bitmaps
+//     // Destroy bitmaps
 
-    for (int i = 0; i < 10; i++)
-    {
-        gbitmap_destroy(lcd_font_digits[i]);
-    }
+//     for (int i = 0; i < 2; i++)
+//     {
+//         gbitmap_destroy(lights_icons[i]);
+//     }
 
-    gbitmap_destroy(lcd_font_bitmap);
+//     gbitmap_destroy(lights_bitmap);
 
-    gbitmap_destroy(kph_text_bitmap);
-    gbitmap_destroy(mph_text_bitmap);
-    gbitmap_destroy(numbers_bitmap);
-}
+//     for (int i = 0; i < 10; i++)
+//     {
+//         gbitmap_destroy(lcd_font_digits[i]);
+//     }
 
-static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
-{
-    layer_mark_dirty(dial_layer);
-}
+//     gbitmap_destroy(lcd_font_bitmap);
 
-static void init()
-{
-    main_window = window_create();
+//     gbitmap_destroy(kph_text_bitmap);
+//     gbitmap_destroy(mph_text_bitmap);
+
+//     gbitmap_destroy(numbers_bitmap);
+// }
+
+// static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
+// {
+//     if (charge_percent >= 20)
+//     {
+//         angle_forward = true;
+
+//         app_timer_register(50, dial_animation_callback, (void *)50);
+//     }
+//     else layer_mark_dirty(dial_layer);
+// }
+
+// void battery_state_handler(BatteryChargeState charge)
+// {
+//     charge_percent = charge.charge_percent;
+//     //charge_percent = 10;
+
+//     layer_mark_dirty(gauge_layer);
+// }
+
+// void bluetooth_connection_handler(bool connected)
+// {
+//     bluetooth_connected = connected;
+//     //bluetooth_connected = false;
+
+//     layer_mark_dirty(gauge_layer);
+// }
+
+// static void init()
+// {
+//     main_window = window_create();
  
-    window_set_window_handlers(main_window, (WindowHandlers) {
-        .load = main_window_load,
-        .unload = main_window_unload
-    });
+//     window_set_window_handlers(main_window, (WindowHandlers) {
+//         .load = main_window_load,
+//         .unload = main_window_unload
+//     });
 
-    window_set_background_color(main_window, GColorBlack);
+//     window_set_background_color(main_window, GColorBlack);
  
-    window_stack_push(main_window, true);
+//     window_stack_push(main_window, true);
 
-    tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
-}
+//     tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+
+//     battery_state_service_subscribe(battery_state_handler);
+//     battery_state_handler(battery_state_service_peek());
+
+//     bluetooth_connection_handler(bluetooth_connection_service_peek());
+//     bluetooth_connection_service_subscribe(bluetooth_connection_handler);
+// }
  
-static void deinit()
-{
-    tick_timer_service_unsubscribe();
+// static void deinit()
+// {
+//     bluetooth_connection_service_unsubscribe();
+//     battery_state_service_unsubscribe();
+//     tick_timer_service_unsubscribe();
 
-    window_destroy(main_window);
-}
+//     window_destroy(main_window);
+// }
  
-int main(void)
-{
-    init();
+// int main(void)
+// {
+//     init();
 
-    app_event_loop();
+//     app_event_loop();
 
-    deinit();
-}
+//     deinit();
+// }

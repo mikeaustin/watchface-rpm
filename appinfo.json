@@ -39,6 +39,11 @@
         "type": "png",
         "name": "IMAGE_KPH_TEXT",
         "file": "kph_text.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_GAUGE_LIGHTS",
+        "file": "gauge_lights.png"
       }
     ]
   }
