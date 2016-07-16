@@ -20,11 +20,21 @@ void graphics_copy_frame_buffer_to_bitmap(GContext *ctx, GBitmap *bitmap)
     GBitmap *buffer = graphics_capture_frame_buffer(ctx);
     uint8_t *data = gbitmap_get_data(buffer);
 
+    GRect bounds = gbitmap_get_bounds(bitmap);
     uint8_t *data2 = gbitmap_get_data(bitmap);
 
-    for (int i = 0; i < 168 * 144; i++)
+    for (int y = 0; y < bounds.size.h; y++)
     {
-        data2[i] = data[i];
+        GBitmapDataRowInfo info = gbitmap_get_data_row_info(buffer, y);
+        GBitmapDataRowInfo info2 = gbitmap_get_data_row_info(bitmap, y);
+
+        for(int x = info.min_x; x <= info.max_x; x++)
+        //for (int x = 0; i < bounds.size.w * bounds.size.h; i++)
+        {
+            memset(&info2.data[x], info.data[x], 1);
+            //data2[x] = info.data[x];
+            //data2[i] = data[i];
+        }
     }
 
     graphics_release_frame_buffer(ctx, buffer);

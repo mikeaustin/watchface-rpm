@@ -6,6 +6,9 @@
 
 #include <pebble.h>
 
+extern Layer *window_layer;
+extern GRect window_bounds;
+
 extern Layer  *gauge_layer, *dial_layer;
 
 extern GBitmap *numbers_bitmap, *background_bitmap;
@@ -71,10 +74,10 @@ void dial_layer_update(Layer *layer, GContext *ctx)
 
     graphics_context_set_compositing_mode(ctx, GCompOpSet);
 
-    int x = 94 - strlen(time_buffer) * 15;
+    int x = (window_bounds.size.w - strlen(time_buffer) * 15) / 2;
     for (unsigned i = 0; i < strlen(time_buffer); i++)
     {
-        graphics_draw_bitmap_in_rect(ctx, lcd_font_digits[time_buffer[i] - '0'], GRect(x + i * 15, 115, 15, 27));
+        graphics_draw_bitmap_in_rect(ctx, lcd_font_digits[time_buffer[i] - '0'], GRect(x + i * 15, (window_bounds.size.h - 27) / 2 + 45, 15, 27));
     }
 
     // Draw black line to center gauge

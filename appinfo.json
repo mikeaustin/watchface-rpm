@@ -3,9 +3,9 @@
   "shortName": "RPM",
   "longName": "RPM",
   "companyName": "Mike Austin",
-  "versionLabel": "1.0",
+  "versionLabel": "1.1",
   "sdkVersion": "3",
-  "targetPlatforms": ["basalt"],
+  "targetPlatforms": ["basalt", "chalk"],
   "watchapp": {
     "watchface": true
   },

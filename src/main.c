@@ -5,7 +5,10 @@
 //
 
 #include <pebble.h>
-  
+
+Layer *window_layer;
+GRect window_bounds;
+
 Window *main_window;
 Layer  *gauge_layer, *dial_layer;
 
@@ -26,9 +29,12 @@ void dial_animation_callback(void *data);
 
 static void main_window_load(Window *window)
 {
+    window_layer = window_get_root_layer(window);
+    window_bounds = layer_get_bounds(window_layer);
+
     // Create background bitmap
 
-    background_bitmap = gbitmap_create_blank(GSize(144, 168), GBitmapFormat8Bit);
+    background_bitmap = gbitmap_create_blank(window_bounds.size, GBitmapFormat8Bit);
 
     // Create numbers bitmaps
 
@@ -59,14 +65,14 @@ static void main_window_load(Window *window)
 
     // Create gauge layer
 
-    gauge_layer = layer_create(GRect(0, 0, 144, 168));
+    gauge_layer = layer_create(window_bounds);
 
     layer_set_update_proc(gauge_layer, gauge_layer_update);
     layer_add_child(window_get_root_layer(window), gauge_layer);
 
     // create dial layer
 
-    dial_layer = layer_create(GRect(0, 0, 144, 168));
+    dial_layer = layer_create(window_bounds);
 
     layer_set_update_proc(dial_layer, dial_layer_update);
     layer_add_child(window_get_root_layer(window), dial_layer);
