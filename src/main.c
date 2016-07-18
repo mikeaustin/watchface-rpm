@@ -22,6 +22,7 @@ bool  bluetooth_connected = false;
 float angle_advance = 5;
 bool  angle_forward = false;
 bool  background_captured = false;
+bool  show_two_hands = true;
 
 void gauge_layer_update(Layer *layer, GContext *ctx);
 void dial_layer_update(Layer *layer, GContext *ctx);
@@ -38,7 +39,10 @@ static void main_window_load(Window *window)
 
     // Create numbers bitmaps
 
-    numbers_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_NUMBERS);
+    if (show_two_hands)
+        numbers_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_NUMBERS_CLOCK);
+    else
+        numbers_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_NUMBERS);
 
     // Create MPH text bitmaps
 
@@ -111,6 +115,7 @@ static void main_window_unload(Window *window)
 static void tick_timer_handler(struct tm *tick_time, TimeUnits units_changed)
 {
     if (charge_percent >= 20)
+    //if (false)
     {
         angle_forward = true;
 
@@ -137,8 +142,36 @@ static void bluetooth_connection_handler(bool connected)
     layer_mark_dirty(gauge_layer);
 }
 
+static void inbox_received_handler(DictionaryIterator *iter, void *context)
+{
+    Tuple *two_hands_t = dict_find(iter, MESSAGE_KEY_TwoHands);
+    if (two_hands_t && show_two_hands != (two_hands_t->value->int32 == 1))
+    {
+        show_two_hands = two_hands_t->value->int32 == 1;
+
+        persist_write_data(0, &show_two_hands, sizeof(show_two_hands));
+
+        gbitmap_destroy(numbers_bitmap);
+
+        if (show_two_hands)
+            numbers_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_NUMBERS_CLOCK);
+        else
+            numbers_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_NUMBERS);
+
+        background_captured = false;
+
+        layer_mark_dirty(gauge_layer);
+        layer_mark_dirty(dial_layer);
+    }
+}
+
 static void init()
 {
+    persist_read_data(0, &show_two_hands, sizeof(show_two_hands));
+
+    app_message_register_inbox_received(inbox_received_handler);
+    app_message_open(128, 128);
+
     main_window = window_create();
  
     window_set_window_handlers(main_window, (WindowHandlers) {

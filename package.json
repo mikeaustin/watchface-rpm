@@ -1,0 +1,73 @@
+{
+  "name": "RPM",
+  "version": "1.2.0",
+  "author": "Mike Austin",
+  "dependencies": {
+    "pebble-clay": "^1.0.2"
+  },
+  "keywords": [
+    "pebble-app"
+  ],
+  "pebble": {
+    "displayName": "RPM",
+    "sdkVersion": "3",
+    "capabilities": [
+      "configurable"
+    ],
+    "projectType": "native",
+    "uuid": "5edcf9cc-9129-420b-b7b3-b756b436c27c",
+    "messageKeys": [
+      "TwoHands"
+    ],
+    "enableMultiJS": true,
+    "watchapp": {
+      "onlyShownOnCommunication": false,
+      "hiddenApp": false,
+      "watchface": true
+    },
+    "targetPlatforms": [
+      "basalt",
+      "chalk"
+    ],
+    "resources": {
+      "media": [
+        {
+          "menuIcon": true,
+          "type": "png",
+          "name": "IMAGE_MENU_ICON",
+          "file": "menu_icon.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUMBERS",
+          "file": "numbers.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUMBERS_CLOCK",
+          "file": "numbers_CLOCK.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_LCD_FONT",
+          "file": "lcd_font.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_MPH_TEXT",
+          "file": "mph_text.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_KPH_TEXT",
+          "file": "kph_text.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_GAUGE_LIGHTS",
+          "file": "gauge_lights.png"
+        }
+      ]
+    }
+  }
+}
